@@ -14,7 +14,7 @@ shinyUI(fluidPage(
     sidebarLayout(fluid = T,
         sidebarPanel(
             
-            selectInput("selectR", "Select USFS Region #:", choices = unique(usfs_attributes$Region), selected = F, selectize=TRUE, multiple = T),
+            selectInput("selectR", "Select USFS Region #:", choices = c("",unique(usfs_attributes$Region)), selected = F, selectize=TRUE, multiple = F),
             submitButton("Load me 1st..."),
             br(),
             selectizeInput("selectID", "Type in Ranger District:", choices = NULL ,selected = F, multiple = T),
