@@ -16,6 +16,8 @@ shinyServer(function(input, output, session) {
     forest <- reactive({
       ## filtering to forests by region selection - SelectR
       req(input$selectR)
+      
+      shinyjs::hide("div1")
       shinyjs::show("div2")
       
       usfs_attributes <- usfs_attributes %>%
@@ -28,6 +30,8 @@ shinyServer(function(input, output, session) {
     region <- reactive({
       ## filtering to ranger district by forest selection - SelectForest
       req(input$selectForest)
+      
+      shinyjs::hide("div2")
       shinyjs::show("div3")
 
       usfs_attributes <- usfs_attributes %>%
@@ -40,6 +44,8 @@ shinyServer(function(input, output, session) {
     sites <- reactive({
       ## filtering to allotments by ranger district selection - SelectRD
       req(input$selectRD)
+      
+      shinyjs::hide("div3")
       shinyjs::show("div4")
       
       usfs_attributes <- usfs_attributes %>%
@@ -52,19 +58,19 @@ shinyServer(function(input, output, session) {
     ## updating reactive selections above - need to be seperate
     observe({
       updateSelectizeInput(session, "selectForest",
-                           label = "Select Forest:",
+                           label = "Select A Forest",
                            choices = c("", forest()), selected = F#, server = TRUE
       )
     })
     observe({
       updateSelectInput(session, "selectRD",
-                        label = "Select Ranger District:",
+                        label = "Select A Ranger District",
                         choices = c("", region()), selected = F#, server = TRUE
       )
     })
     observe({
       updateSelectInput(session, "selectSite",
-                        label = "Select Allotment:",
+                        label = "Select Allotment(s) if needed",
                         choices = c("", sites()), selected = F#, server = TRUE
       )
     })
@@ -81,7 +87,7 @@ shinyServer(function(input, output, session) {
         usfs_ranger_district <- usfs_ranger_district[
             with(usfs_ranger_district, order(
                 PASTURE_NA,
-                MANAGING_O, ALLOTMENT1, PASTURE_NU
+                MANAGING_O, ALLOTMENT1, PASTURE_NU, ALLOTMENT_, FORESTNAME
             )),
         ]
     })
@@ -99,22 +105,35 @@ shinyServer(function(input, output, session) {
                     substr(MANAGING_O, 3, 4), "-",
                     substr(MANAGING_O, 5, 6), "-"
                 )) %>%
-                mutate(PASTURE_NA = paste0(PASTURE_NA, " PASTURE")) %>%
-                mutate(ALLOTMENT1 = paste0(ALLOTMENT1, "-")) %>%
+                #mutate(PASTURE_NA = paste0(PASTURE_NA, " PASTURE")) %>%
+                #mutate(ALLOTMENT1 = paste0(ALLOTMENT1, "-")) %>%
                 select(PASTURE_NA, MANAGING_O, ALLOTMENT1, PASTURE_NU,
-                MANAGING_1, PASTURE_ST)
-
-            names(usfs_ranger_district)[1] <- "PASTURE FOLDER NAME"
-            names(usfs_ranger_district)[2] <- "MANAGING #"
-            names(usfs_ranger_district)[3] <- "ALLOTMENT #"
-            names(usfs_ranger_district)[4] <- "PASTURE #"
-            names(usfs_ranger_district)[5] <- "RANGER DISTRICT"
-            names(usfs_ranger_district)[6] <- "PASTURE STATUS"
+                MANAGING_1, PASTURE_ST, FORESTNAME, ALLOTMENT_)
+            
+            ## concat VGS-USFS name
+            usfs_ranger_district <- usfs_ranger_district %>%
+              mutate("VgsName" = paste0(MANAGING_O,"-",ALLOTMENT1,"-",PASTURE_NU))
+            
+            names(usfs_ranger_district)[1] <- "Pasture"
+            names(usfs_ranger_district)[2] <- "Managing#"
+            names(usfs_ranger_district)[3] <- "Allotment#"
+            names(usfs_ranger_district)[4] <- "Pasture#"
+            names(usfs_ranger_district)[5] <- "RangerDistrict"
+            names(usfs_ranger_district)[6] <- "Status"
+            names(usfs_ranger_district)[7] <- "Forest"
+            names(usfs_ranger_district)[8] <- "Allotment"
+            
+            ## re-order table
+            usfs_ranger_district <- usfs_ranger_district %>%
+              select("VgsName","Pasture","Allotment","RangerDistrict","Forest",
+                     "Managing#","Allotment#","Pasture#","Status")
 
             usfs_ranger_district <- as.data.frame(usfs_ranger_district)
 
-            datafile <- datatable(usfs_ranger_district,
-                options = list(pageLength = 20),
+            datafile <- DT::datatable(usfs_ranger_district, extensions = 'Buttons',
+                options = list(pageLength = 100,
+                               dom = 'Bfrtip',
+                               buttons = c('copy', 'csv', 'excel', 'pdf', 'print')),
                 style = "bootstrap",
                 class = "compact cell-border hover display",
                 filter = list(position = "top", plain = TRUE)
@@ -141,24 +160,38 @@ shinyServer(function(input, output, session) {
                     substr(MANAGING_O, 3, 4), "-",
                     substr(MANAGING_O, 5, 6), "-"
                 )) %>%
-                mutate(PASTURE_NA = paste0(PASTURE_NA, " PASTURE")) %>%
-                mutate(ALLOTMENT1 = paste0(ALLOTMENT1, "-")) %>%
-                select(PASTURE_NA, MANAGING_O, ALLOTMENT1, PASTURE_NU,
-                MANAGING_1, PASTURE_ST)
+                #mutate(PASTURE_NA = paste0(PASTURE_NA, " PASTURE")) %>%
+                #mutate(ALLOTMENT1 = paste0(ALLOTMENT1, "-")) %>%
+               select(PASTURE_NA, MANAGING_O, ALLOTMENT1, PASTURE_NU,
+                     MANAGING_1, PASTURE_ST, FORESTNAME, ALLOTMENT_)
 
-            names(usfs_ranger_district)[1] <- "PASTURE FOLDER NAME"
-            names(usfs_ranger_district)[2] <- "MANAGING #"
-            names(usfs_ranger_district)[3] <- "ALLOTMENT #"
-            names(usfs_ranger_district)[4] <- "PASTURE #"
-            names(usfs_ranger_district)[5] <- "RANGER DISTRICT"
-            names(usfs_ranger_district)[6] <- "PASTURE STATUS"
+            ## concat VGS-USFS name
+            usfs_ranger_district <- usfs_ranger_district %>%
+              mutate("VgsName" = paste0(MANAGING_O,"-",ALLOTMENT1,"-",PASTURE_NU))
+            
+            names(usfs_ranger_district)[1] <- "Pasture"
+            names(usfs_ranger_district)[2] <- "Managing#"
+            names(usfs_ranger_district)[3] <- "Allotment#"
+            names(usfs_ranger_district)[4] <- "Pasture#"
+            names(usfs_ranger_district)[5] <- "RangerDistrict"
+            names(usfs_ranger_district)[6] <- "Status"
+            names(usfs_ranger_district)[7] <- "Forest"
+            names(usfs_ranger_district)[8] <- "Allotment"
+            
+            ## re-order table
+            usfs_ranger_district <- usfs_ranger_district %>%
+              select("VgsName","Pasture","Allotment","RangerDistrict","Forest",
+                     "Managing#","Allotment#","Pasture#","Status")
 
             usfs_ranger_district <- as.data.frame(usfs_ranger_district)
 
-            datafile <- datatable(usfs_ranger_district,
-                style = "bootstrap",
-                class = "compact cell-border hover display",
-                filter = list(position = "top", plain = TRUE)
+            datafile <- datatable(usfs_ranger_district,extensions = 'Buttons',
+                                  options = list(pageLength = 100,
+                                                 dom = 'Bfrtip',
+                                                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print')),
+                                  style = "bootstrap",
+                                  class = "compact cell-border hover display",
+                                  filter = list(position = "top", plain = TRUE)
             )
         })
     })
