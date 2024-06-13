@@ -5,46 +5,61 @@
 ## ----------------------------------------------------------------
 ## Server
 shinyServer(function(input, output, session) {
+  
+    forest <- reactive({
+      ## filtering to forests by region selection - SelectR
+      req(input$selectR)
+      usfs_attributes <- usfs_attributes %>%
+        filter(!is.na(FORESTNAME)) %>% 
+        arrange(FORESTNAME)
+      a1 <- usfs_attributes$FORESTNAME[usfs_attributes$Region == input$selectR] # nolint
+      return(a1)
+    })
 
-    ## filtering selection by region selection
     region <- reactive({
-        req(input$selectR)
-        ## organizing
-        usfs_attributes <- usfs_attributes %>%
-            arrange(MANAGING_1)
-        a1 <- usfs_attributes$MANAGING_1[usfs_attributes$Region == input$selectR] # nolint
-        return(a1)
+      ## filtering to ranger district by forest selection - SelectForest
+      req(input$selectForest)
+      usfs_attributes <- usfs_attributes %>%
+        filter(!is.na(MANAGING_1)) %>% 
+        arrange(MANAGING_1)
+      a2 <- usfs_attributes$MANAGING_1[usfs_attributes$FORESTNAME == input$selectForest] # nolint
+      return(a2)
     })
-
-
-    ## filtering selection by Ranger District Selected
+    
     sites <- reactive({
-        req(input$selectID)
-        ## organizing
-        usfs_attributes <- usfs_attributes %>%
-            arrange(ALLOTMENT_)
-        a <- usfs_attributes$ALLOTMENT_[usfs_attributes$MANAGING_1 == input$selectID] # nolint
-        return(a)
+      ## filtering to allotments by ranger district selection - SelectRD
+      req(input$selectRD)
+      usfs_attributes <- usfs_attributes %>%
+        filter(!is.na(ALLOTMENT_)) %>%
+        arrange(ALLOTMENT_)
+      a3 <- usfs_attributes$ALLOTMENT_[usfs_attributes$MANAGING_1 == input$selectRD] # nolint
+      return(a3)
+    })
+
+    ## updating reactive selections above
+    observe({
+      updateSelectizeInput(session, "selectForest",
+                           label = "Select Forest:",
+                           choices = c("", forest()), selected = F#, server = TRUE
+      )
+    })
+    
+    observe({
+      updateSelectInput(session, "selectRD",
+                           label = "Select Ranger District:",
+                           choices = c("", region()), selected = F#, server = TRUE
+      )
     })
 
     observe({
-        # create selection box
-        updateSelectizeInput(session, "selectID",
-            label = "Type in Ranger District:",
-            choices = c("", region()), selected = F, server = TRUE
-        )
-    })
-
-    observe({
-        # create selection box
-        updateSelectizeInput(session, "selectSite",
+        updateSelectInput(session, "selectSite",
             label = "Select Allotment:",
-            choices = c("", sites()), selected = F, server = TRUE
+            choices = c("", sites()), selected = F#, server = TRUE
         )
     })
 
     react_data <- reactive({
-        district <- input$selectID
+        district <- input$selectRD
 
         req(district)
 
@@ -61,13 +76,13 @@ shinyServer(function(input, output, session) {
     })
 
     ## table for allotment selection
-    observeEvent(input$selectID, {
+    observeEvent(input$selectRD, {
         output$distTable <- DT::renderDT({
             usfs_ranger_district <- react_data()
 
             usfs_ranger_district <- usfs_ranger_district %>%
                 filter(Region %in% c(input$selectR)) %>%
-                filter(MANAGING_1 %in% c(input$selectID)) %>%
+                filter(MANAGING_1 %in% c(input$selectRD)) %>%
                 mutate(MANAGING_O = paste0(
                     substr(MANAGING_O, 1, 2), "-",
                     substr(MANAGING_O, 3, 4), "-",
@@ -106,7 +121,7 @@ shinyServer(function(input, output, session) {
 
             usfs_ranger_district <- usfs_attributes %>%
                 filter(Region %in% c(input$selectR)) %>%
-                filter(MANAGING_1 %in% c(input$selectID)) %>%
+                filter(MANAGING_1 %in% c(input$selectRD)) %>%
                 filter(ALLOTMENT_ == c(site))
 
             usfs_ranger_district <- usfs_ranger_district %>%

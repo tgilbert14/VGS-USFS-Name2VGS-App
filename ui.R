@@ -14,14 +14,17 @@ shinyUI(fluidPage(
     sidebarLayout(fluid = T,
         sidebarPanel(
             
-            selectInput("selectR", "Select USFS Region #:", choices = c("",unique(usfs_attributes$Region)), selected = F, selectize=TRUE, multiple = F),
-            submitButton("Load me 1st..."),
+            selectInput("selectR", "Select Region #:", choices = c("",unique(usfs_attributes$Region)), selected = F, selectize=TRUE, multiple = F),
+            submitButton("Load Regions"),
             br(),
-            selectizeInput("selectID", "Type in Ranger District:", choices = NULL ,selected = F, multiple = T),
-            submitButton("Load me 2nd..."),
+            selectizeInput("selectForest", "Select Region to generate forests", choices = NULL ,selected = F, multiple = F),
+            submitButton("Load Ranger Districts"),
             br(),
-            selectizeInput("selectSite", label= "Select Allotment:", choices = NULL ,selected = F, multiple = F),
-            submitButton("Load me 3rd...")
+            selectInput("selectRD", "Select Forest to generate Ranger Districts", choices = NULL ,selected = F, multiple = T),
+            submitButton("Get Allotments"),
+            br(),
+            selectInput("selectSite", label= "Select Ranger District to generate Allotments", choices = NULL ,selected = F, multiple = T),
+            submitButton("Get Pastures")
         ),
         
         # Show a plot of the generated distribution
