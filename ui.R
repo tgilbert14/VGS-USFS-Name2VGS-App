@@ -1,30 +1,33 @@
 ## ------------------------------------------------------------------------------
 ## Timothy Gilbert
-## 2022-05-17
-## Reads a shape file from USDA.gov from 5/17/2022 to see Allotment/Pasture data
+## Last update: 2024-06-13
 ## ------------------------------------------------------------------------------
 
 ## Define UI
 shinyUI(fluidPage(
   theme = shinytheme("paper"),collapsable = TRUE,
+  useShinyjs(),
 
     # Application title
     titlePanel("USFS Naming Convention"),#theme = "bootstrap_yeti.css",
     # Sidebar with a slider input for number of bins
     sidebarLayout(fluid = T,
         sidebarPanel(
-            
-            selectInput("selectR", "Select Region #:", choices = c("",unique(usfs_attributes$Region)), selected = F, selectize=TRUE, multiple = F),
-            submitButton("Load Regions"),
+            div(id="div1",
+             selectInput("selectR", "Select Region #:", choices = c("",unique(usfs_attributes$Region)), selected = F, selectize=TRUE, multiple = F),
+             submitButton("Load Regions")),
             br(),
-            selectizeInput("selectForest", "Select Region to generate forests", choices = NULL ,selected = F, multiple = F),
-            submitButton("Load Ranger Districts"),
+            div(id="div2",
+             selectizeInput("selectForest", "Select Region to generate forests", choices = NULL ,selected = F, multiple = F),
+             submitButton("Load Ranger Districts")),
             br(),
-            selectInput("selectRD", "Select Forest to generate Ranger Districts", choices = NULL ,selected = F, multiple = T),
-            submitButton("Get Allotments"),
+            div(id="div3",
+             selectInput("selectRD", "Select Forest to generate Ranger Districts", choices = NULL ,selected = F, multiple = T),
+             submitButton("Get Allotments")),
             br(),
-            selectInput("selectSite", label= "Select Ranger District to generate Allotments", choices = NULL ,selected = F, multiple = T),
-            submitButton("Get Pastures")
+            div(id="div4",
+             selectInput("selectSite", label= "Select Ranger District to generate Allotments", choices = NULL ,selected = F, multiple = T),
+             submitButton("Get Pastures"))
         ),
         
         # Show a plot of the generated distribution

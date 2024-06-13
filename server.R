@@ -1,66 +1,77 @@
 ## -----------------------------------------------------------------
 ## Timothy Gilbert
-## 2022-05-17
-## Reads a shape file from USDA.gov from 5/17/2022 to see Allotment/Pasture data
+## Last update: 2024-06-13
 ## ----------------------------------------------------------------
 ## Server
 shinyServer(function(input, output, session) {
   
+    ## hide initial selection options until needed
+    shinyjs::hide("div2")
+    shinyjs::hide("div3")
+    shinyjs::hide("div4")
+  
+    ## initial state so loading bar does not spin on start
+    output$distTable<- NULL
+    
     forest <- reactive({
       ## filtering to forests by region selection - SelectR
       req(input$selectR)
+      shinyjs::show("div2")
+      
       usfs_attributes <- usfs_attributes %>%
-        filter(!is.na(FORESTNAME)) %>% 
         arrange(FORESTNAME)
-      a1 <- usfs_attributes$FORESTNAME[usfs_attributes$Region == input$selectR] # nolint
+      a1 <- unique(usfs_attributes$FORESTNAME[usfs_attributes$Region == input$selectR]) # nolint
+      a1 <- a1[!is.na(a1)]
       return(a1)
     })
 
     region <- reactive({
       ## filtering to ranger district by forest selection - SelectForest
       req(input$selectForest)
+      shinyjs::show("div3")
+
       usfs_attributes <- usfs_attributes %>%
-        filter(!is.na(MANAGING_1)) %>% 
         arrange(MANAGING_1)
-      a2 <- usfs_attributes$MANAGING_1[usfs_attributes$FORESTNAME == input$selectForest] # nolint
+      a2 <- unique(usfs_attributes$MANAGING_1[usfs_attributes$FORESTNAME == input$selectForest]) # nolint
+      a2 <- a2[!is.na(a2)]
       return(a2)
     })
     
     sites <- reactive({
       ## filtering to allotments by ranger district selection - SelectRD
       req(input$selectRD)
+      shinyjs::show("div4")
+      
       usfs_attributes <- usfs_attributes %>%
-        filter(!is.na(ALLOTMENT_)) %>%
         arrange(ALLOTMENT_)
-      a3 <- usfs_attributes$ALLOTMENT_[usfs_attributes$MANAGING_1 == input$selectRD] # nolint
+      a3 <- unique(usfs_attributes$ALLOTMENT_[usfs_attributes$MANAGING_1 == input$selectRD]) # nolint
+      a3 <- a3[!is.na(a3)]
       return(a3)
     })
-
-    ## updating reactive selections above
+    
+    ## updating reactive selections above - need to be seperate
     observe({
       updateSelectizeInput(session, "selectForest",
                            label = "Select Forest:",
                            choices = c("", forest()), selected = F#, server = TRUE
       )
     })
-    
     observe({
       updateSelectInput(session, "selectRD",
-                           label = "Select Ranger District:",
-                           choices = c("", region()), selected = F#, server = TRUE
+                        label = "Select Ranger District:",
+                        choices = c("", region()), selected = F#, server = TRUE
       )
     })
-
     observe({
-        updateSelectInput(session, "selectSite",
-            label = "Select Allotment:",
-            choices = c("", sites()), selected = F#, server = TRUE
-        )
+      updateSelectInput(session, "selectSite",
+                        label = "Select Allotment:",
+                        choices = c("", sites()), selected = F#, server = TRUE
+      )
     })
-
+    
+    ## reactive data based on selections
     react_data <- reactive({
         district <- input$selectRD
-
         req(district)
 
         usfs_ranger_district <- usfs_attributes %>% # nolint
@@ -75,7 +86,7 @@ shinyServer(function(input, output, session) {
         ]
     })
 
-    ## table for allotment selection
+    ## generating table for allotment selection and cleaning up
     observeEvent(input$selectRD, {
         output$distTable <- DT::renderDT({
             usfs_ranger_district <- react_data()
@@ -111,7 +122,7 @@ shinyServer(function(input, output, session) {
         })
     })
 
-    ## table for pasture selection
+    ## generating table for pasture selection and cleaning up
     observeEvent(input$selectSite, {
         output$distTable <- DT::renderDT({
             site <- input$selectSite
