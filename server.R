@@ -112,7 +112,7 @@ shinyServer(function(input, output, session) {
             
             ## concat VGS-USFS name
             usfs_ranger_district <- usfs_ranger_district %>%
-              mutate("VgsName" = paste0(MANAGING_O,"-",ALLOTMENT1,"-",PASTURE_NU))
+              mutate("VgsName" = paste0(MANAGING_O,ALLOTMENT1,"-",PASTURE_NU))
             
             names(usfs_ranger_district)[1] <- "Pasture"
             names(usfs_ranger_district)[2] <- "Managing#"
@@ -167,7 +167,7 @@ shinyServer(function(input, output, session) {
 
             ## concat VGS-USFS name
             usfs_ranger_district <- usfs_ranger_district %>%
-              mutate("VgsName" = paste0(MANAGING_O,"-",ALLOTMENT1,"-",PASTURE_NU))
+              mutate("VgsName" = paste0(MANAGING_O,ALLOTMENT1,"-",PASTURE_NU))
             
             names(usfs_ranger_district)[1] <- "Pasture"
             names(usfs_ranger_district)[2] <- "Managing#"
