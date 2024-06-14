@@ -31,7 +31,7 @@ shinyServer(function(input, output, session) {
       ## filtering to ranger district by forest selection - SelectForest
       req(input$selectForest)
       
-      shinyjs::hide("div2")
+      #shinyjs::hide("div2")
       shinyjs::show("div3")
 
       usfs_attributes <- usfs_attributes %>%
@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
       ## filtering to allotments by ranger district selection - SelectRD
       req(input$selectRD)
       
-      shinyjs::hide("div3")
+      #shinyjs::hide("div3")
       shinyjs::show("div4")
       
       usfs_attributes <- usfs_attributes %>%
